@@ -28,6 +28,7 @@ func getListenPort() string {
 }
 
 func handler(writer http.ResponseWriter, request *http.Request) {
+	fmt.Println("request from ", request.RemoteAddr)
 	githubID := request.FormValue("github_id")
 	writer.Header().Set("Access-Control-Allow-Origin", "*")
 	writer.Header().Set("Content-Type", "application/json")
@@ -42,12 +43,12 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	response := contrib{Contributions: contri}
-	json, err := json.MarshalIndent(&response, "", "\t\t")
+	encoder := json.NewEncoder(writer)
+	err = encoder.Encode(&response)
 	if err != nil {
 		writer.WriteHeader(500)
 		return
 	}
-	fmt.Fprintln(writer, json)
 }
 
 type contrib struct {
