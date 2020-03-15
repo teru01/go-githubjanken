@@ -40,6 +40,7 @@ func handler(writer http.ResponseWriter, request *http.Request) {
 		default:
 			writer.WriteHeader(500)
 		}
+		fmt.Fprintf(writer, err.Error())
 		return
 	}
 	response := contrib{Contributions: contri}
@@ -63,26 +64,26 @@ func (e *statusError) Error() string {
 	return string(e.code)
 }
 
-func fetchContributions(url string) (contri int, err error) {
+func fetchContributions(url string) (int, error) {
 	response, err := http.Get(url)
 	if err != nil {
-		return
+		return -1, err
 	}
 
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
 		err = &statusError{response.StatusCode}
-		return
+		return -1, err
 	}
 	doc, err := goquery.NewDocumentFromReader(response.Body)
 
 	if err != nil {
-		return
+		return -1, err
 	}
 	content, err := doc.Find("h2").Html()
 	if err != nil {
-		return
+		return -1, err
 	}
-	contri, err = strconv.Atoi(strings.Split(strings.TrimSpace(content), " ")[0])
-	return
+	contributions := strings.Split(strings.TrimSpace(content), " ")[0]
+	return strconv.Atoi(strings.Join(strings.Split(contributions, ","), ""))
 }
